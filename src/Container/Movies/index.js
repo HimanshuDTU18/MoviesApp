@@ -5,23 +5,25 @@ import Col from 'react-bootstrap/Col';
 import axios from 'axios';
 import CardMoviesComponents from '../../Components/CardMovies';
 import PaginationComponent from '../../Components/Pagination';
-import SearchBarCardComponents from '../../Components/SearchBox';
 
-const  SearchContainer = ()=>{
+import LeftListBarComponent from '../../Components/LeftListBar';
+import useGenres from '../../Hooks/useGenres';
+
+const  MoviesContainer = ()=>{
     const [content, setContent] = useState([]);
-    const [pageno, setPageno] = useState(1);
-    const [paginationno, setPaginationno] = useState(0);
 
-    const [searchValue, setSearchValue] = useState('crime');
-    const [typeValue, setTypeValue] = useState('movie');
+    const [genres, setGenres] = useState([]);
+    const [selectedGenres, setSelectedGenres] = useState([]);
+
+    const [pageno, setPageno] = useState(1)
+    const [paginationno, setPaginationno] = useState(0)
     const API_KEY = process.env.REACT_APP_NOT_SECRET_CODE;
 
     
-    
+    const genreforURL = useGenres(selectedGenres)
     const GetDataTrending = async ()=>{
         
-        const {data} = await axios.get(`https://api.themoviedb.org/3/search/${typeValue}?api_key=${API_KEY}&page=${pageno}&language=en-US&query=${searchValue}&include_adult=false`);
-        console.log('data', data.results)
+        const {data} = await axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&page=${pageno}&with_genres=&language=en-US&with_genres=${genreforURL}`)
         setContent(data.results);
         setPaginationno(data.total_pages);
     }
@@ -32,11 +34,11 @@ const  SearchContainer = ()=>{
         //eslint-disable-next-line
     }, [])
 
-    const fetchDataQuery = ()=>{
-        // 
-        GetDataTrending()
-    }
-    
+    useEffect(()=>{
+        GetDataTrending();
+        //eslint-disable-next-line
+    }, [pageno, genreforURL])
+
     const handleClick = (number)=>{
         setPageno(number);
     }
@@ -51,24 +53,20 @@ const  SearchContainer = ()=>{
                 <Row>
                     <Col className='col-12'>
                         <section>
-                            <h1 className='txtCenter'>Search Movies /  TV Series</h1>
+                            <h1 className='txtCenter'>Top Trending Movies</h1>
                             <h3 className='txtCenter'> For You</h3>
-                            <SearchBarCardComponents 
-                                searchValue={searchValue}
-                                setSearchValue={(value)=>{setSearchValue(value)}}
-                                typeValue={typeValue}
-                                setTypeValue={(value)=>{setTypeValue(value)}}
-                                filterData={fetchDataQuery} />
                         </section>
                     </Col>
                 </Row>
                 <Row>
-                    
-                    <Col className='col-12'>
+                    <Col className='col-2'>
+                        <LeftListBarComponent genres={genres} selectedGenres={selectedGenres} setSelectedGenres={setSelectedGenres}  setGenres={setGenres} type="movie" setPage={setPageno}/> 
+                    </Col>
+                    <Col className='col-10'>
                         <Row>
                                 {
                                     content && content.length > 0 ? content.map((item, index)=>{
-                                        return (<CardMoviesComponents key={index} data={item} mediaType={typeValue}/>)
+                                        return (<CardMoviesComponents key={index} data={item} mediaType="movie"/>)
                                     }) : 'Loading ....'
                                 }
 
@@ -84,4 +82,4 @@ const  SearchContainer = ()=>{
     )
 }
 
-export default SearchContainer;
+export default MoviesContainer;
